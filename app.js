@@ -33,7 +33,7 @@ function loadState() {
   try {
     const loaded = JSON.parse(saved);
     const merged = { ...structuredClone(seedState), ...loaded };
-    merged.users = merged.users.map((user) => ({ username: user.name?.toLowerCase?.().replaceAll(" ", ".") || "user", photo: "", id: user.id, name: user.name, email: user.email, role: user.role, username: user.username, photo: user.photo || "" }));
+    merged.users = merged.users.map((user) => ({ id: user.id, name: user.name, email: user.email, role: user.role, username: user.username || user.name?.toLowerCase?.().replaceAll(" ", ".") || "user", photo: user.photo || "" }));
     return merged;
   } catch {
     return structuredClone(seedState);
@@ -53,6 +53,7 @@ function tasksForProject(projectId) { return state.tasks.filter((task) => task.p
 function subtasksForTask(taskId) { return state.subtasks.filter((subtask) => subtask.task_id === taskId); }
 function taskProgress(taskId) { const subtasks = subtasksForTask(taskId); if (!subtasks.length) { const task = state.tasks.find((item) => item.id === taskId); return Number(task?.progress_percent || 0); } return Math.round((subtasks.filter((item) => item.completed).length / subtasks.length) * 100); }
 function projectProgress(projectId) { const tasks = tasksForProject(projectId); if (!tasks.length) return 0; return Math.round(tasks.reduce((sum, task) => sum + taskProgress(task.id), 0) / tasks.length); }
+function categoryProgress(tasks) { if (!tasks.length) return 0; return Math.round(tasks.reduce((sum, task) => sum + taskProgress(task.id), 0) / tasks.length); }
 
 function syncTaskStatus(taskId) {
   const task = state.tasks.find((item) => item.id === taskId);
@@ -112,7 +113,8 @@ function taskCard(task) {
 }
 
 function taskGroup(title, tasks, className) {
-  return `<section class="task-group"><div class="group-header"><span>${title}</span><span class="badge ${className}">${tasks.length}</span></div>${tasks.map(taskCard).join("") || `<section class="card empty-state">Nothing here yet.</section>`}</section>`;
+  const percent = categoryProgress(tasks);
+  return `<details class="task-group"><summary class="group-header"><span class="group-title"><span class="group-chevron">⌄</span>${title}</span><span class="badge ${className}">${tasks.length} · ${percent}%</span></summary><div class="task-group-body">${tasks.map(taskCard).join("") || `<section class="card empty-state">Nothing here yet.</section>`}</div></details>`;
 }
 
 function groupedTasks(projectId) {
@@ -127,7 +129,7 @@ function renderProjectDetail() {
   const project = state.projects.find((item) => item.id === state.selectedProjectId);
   if (!project) return setView("home", { selectedProjectId: null, selectedTaskId: null });
   const progress = projectProgress(project.id);
-  renderShell(`<button class="back-button" data-view="home">← Back to projects</button><section class="card"><div class="card-row"><div><h2 class="card-title">${escapeHtml(project.title)}</h2><p class="card-copy">${escapeHtml(project.description || "No description yet.")}</p></div><div class="countdown ${countdownClass(project.deadline)}">${countdownLabel(project.deadline)}<small>${formatDate(project.deadline)}</small></div></div>${projectPulseMarkup(progress)}<div class="action-grid"><button class="secondary-button" data-action="open-project-form" data-id="${project.id}" ${canEdit() ? "" : "disabled"}>Edit</button><button class="danger-button" data-action="delete-project" data-id="${project.id}" ${canAdmin() ? "" : "disabled"}>Delete</button></div></section><section class="toolbar"><strong>${tasksForProject(project.id).length} task${tasksForProject(project.id).length === 1 ? "" : "s"}</strong><button class="secondary-button" data-action="open-task-form" ${canEdit() ? "" : "disabled"}>Add Task</button></section>${tasksForProject(project.id).length ? groupedTasks(project.id) : `<section class="card empty-state">No tasks yet. Add a task to begin tracking work.</section>`}`, progress === 100);
+  renderShell(`<button class="back-button" data-view="home">← Back to projects</button><section class="card"><div class="card-row"><div><h2 class="card-title">${escapeHtml(project.title)}</h2><p class="card-copy">${escapeHtml(project.description || "No description yet.")}</p></div><div class="countdown ${countdownClass(project.deadline)}">${countdownLabel(project.deadline)}<small>${formatDate(project.deadline)}</small></div></div>${projectPulseMarkup(progress)}<div class="action-grid"><button class="secondary-button" data-action="open-project-form" data-id="${project.id}" ${canEdit() ? "" : "disabled"}>Edit</button><button class="danger-button" data-action="delete-project" data-id="${project.id}" ${canAdmin() ? "" : "disabled"}>Delete</button></div></section><section class="toolbar"><div><strong>Task drawers</strong><p class="card-copy">Open a category only when you need the details.</p></div><button class="secondary-button" data-action="open-task-form" ${canEdit() ? "" : "disabled"}>Add Task</button></section>${tasksForProject(project.id).length ? groupedTasks(project.id) : `<section class="card empty-state">No tasks yet. Add a task to begin tracking work.</section>`}`, progress === 100);
 }
 
 function renderTaskDetail() {
@@ -146,7 +148,7 @@ function renderActivity() {
 }
 
 function renderHelp() {
-  renderShell(`<section class="card"><h2 class="card-title">Project Pulse v0.2</h2><p class="card-copy">This version adds profile editing, editable subtasks, grouped tasks, a donut-style project pulse, and a celebration backdrop at 100%.</p></section><section class="card"><h3 class="card-title">Important note</h3><p class="card-copy">Photos and usernames are local prototype fields only. Real secure login requires a backend such as Supabase or Firebase.</p></section>`);
+  renderShell(`<section class="card"><h2 class="card-title">Project Pulse v0.2</h2><p class="card-copy">This version adds profile editing, editable subtasks, category drawers, a donut-style project pulse, and a celebration backdrop at 100%.</p></section><section class="card"><h3 class="card-title">Important note</h3><p class="card-copy">Photos and usernames are local prototype fields only. Real secure login requires a backend such as Supabase or Firebase.</p></section>`);
 }
 
 function openModal(title, body) { document.body.insertAdjacentHTML("beforeend", `<div class="modal-backdrop" data-action="close-modal"><section class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()"><div class="modal-header"><h2>${escapeHtml(title)}</h2><button class="close-button" data-action="close-modal">×</button></div>${body}</section></div>`); }
