@@ -17,7 +17,14 @@ const seedState = {
     { id: "user-viewer", name: "Viewer", username: "viewer", email: "viewer@example.com", role: "viewer", photo: "" }
   ],
   projects: [
-    { id: crypto.randomUUID(), title: "Project Pulse MVP", description: "Build the first working version of the mobile project planner.", created_by: "user-topher", created_at: new Date().toISOString(), deadline: addDaysIso(14) }
+    {
+      id: crypto.randomUUID(),
+      title: "Project Pulse MVP",
+      description: "Build the first working version of the mobile project planner.",
+      created_by: "user-topher",
+      created_at: new Date().toISOString(),
+      deadline: addDaysIso(14)
+    }
   ],
   tasks: [],
   subtasks: [],
@@ -33,7 +40,14 @@ function loadState() {
   try {
     const loaded = JSON.parse(saved);
     const merged = { ...structuredClone(seedState), ...loaded };
-    merged.users = merged.users.map((user) => ({ id: user.id, name: user.name, email: user.email, role: user.role, username: user.username || user.name?.toLowerCase?.().replaceAll(" ", ".") || "user", photo: user.photo || "" }));
+    merged.users = merged.users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      username: user.username || user.name?.toLowerCase?.().replaceAll(" ", ".") || "user",
+      photo: user.photo || ""
+    }));
     return merged;
   } catch {
     return structuredClone(seedState);
@@ -51,9 +65,23 @@ function canEdit() { return ["admin", "editor"].includes(currentUser().role); }
 function canAdmin() { return currentUser().role === "admin"; }
 function tasksForProject(projectId) { return state.tasks.filter((task) => task.project_id === projectId); }
 function subtasksForTask(taskId) { return state.subtasks.filter((subtask) => subtask.task_id === taskId); }
-function taskProgress(taskId) { const subtasks = subtasksForTask(taskId); if (!subtasks.length) { const task = state.tasks.find((item) => item.id === taskId); return Number(task?.progress_percent || 0); } return Math.round((subtasks.filter((item) => item.completed).length / subtasks.length) * 100); }
-function projectProgress(projectId) { const tasks = tasksForProject(projectId); if (!tasks.length) return 0; return Math.round(tasks.reduce((sum, task) => sum + taskProgress(task.id), 0) / tasks.length); }
-function categoryProgress(tasks) { if (!tasks.length) return 0; return Math.round(tasks.reduce((sum, task) => sum + taskProgress(task.id), 0) / tasks.length); }
+function taskProgress(taskId) {
+  const subtasks = subtasksForTask(taskId);
+  if (!subtasks.length) {
+    const task = state.tasks.find((item) => item.id === taskId);
+    return Number(task?.progress_percent || 0);
+  }
+  return Math.round((subtasks.filter((item) => item.completed).length / subtasks.length) * 100);
+}
+function projectProgress(projectId) {
+  const tasks = tasksForProject(projectId);
+  if (!tasks.length) return 0;
+  return Math.round(tasks.reduce((sum, task) => sum + taskProgress(task.id), 0) / tasks.length);
+}
+function categoryProgress(tasks) {
+  if (!tasks.length) return 0;
+  return Math.round(tasks.reduce((sum, task) => sum + taskProgress(task.id), 0) / tasks.length);
+}
 
 function syncTaskStatus(taskId) {
   const task = state.tasks.find((item) => item.id === taskId);
@@ -94,7 +122,10 @@ function renderShell(content, celebrate = false) {
 }
 
 function progressMarkup(percent) { return `<div class="progress-wrap"><div class="progress-meta"><span>Task progress</span><span>${percent}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div></div>`; }
-function projectPulseMarkup(percent) { const note = percent === 100 ? "Finished. Confetti earned." : percent >= 70 ? "So close you can taste it." : percent >= 35 ? "Momentum is building." : "Every big thing starts tiny."; return `<div class="project-pulse"><div class="donut" style="--value:${percent}"><span>${percent}%</span></div><div><p class="celebration-note">Project Pulse</p><p class="card-copy">${note}</p></div></div>`; }
+function projectPulseMarkup(percent) {
+  const note = percent === 100 ? "Finished. Confetti earned." : percent >= 70 ? "So close you can taste it." : percent >= 35 ? "Momentum is building." : "Every big thing starts tiny.";
+  return `<div class="project-pulse"><div class="donut" style="--value:${percent}"><span>${percent}%</span></div><div><p class="celebration-note">Project Pulse</p><p class="card-copy">${note}</p></div></div>`;
+}
 function taskBadge(status) { if (status === "completed") return `<span class="badge completed">Completed</span>`; if (status === "in progress") return `<span class="badge progress">In progress</span>`; return `<span class="badge not">Not started</span>`; }
 
 function projectCard(project) {
@@ -129,7 +160,7 @@ function renderProjectDetail() {
   const project = state.projects.find((item) => item.id === state.selectedProjectId);
   if (!project) return setView("home", { selectedProjectId: null, selectedTaskId: null });
   const progress = projectProgress(project.id);
-  renderShell(`<button class="back-button" data-view="home">← Back to projects</button><section class="card"><div class="card-row"><div><h2 class="card-title">${escapeHtml(project.title)}</h2><p class="card-copy">${escapeHtml(project.description || "No description yet.")}</p></div><div class="countdown ${countdownClass(project.deadline)}">${countdownLabel(project.deadline)}<small>${formatDate(project.deadline)}</small></div></div>${projectPulseMarkup(progress)}<div class="action-grid"><button class="secondary-button" data-action="open-project-form" data-id="${project.id}" ${canEdit() ? "" : "disabled"}>Edit</button><button class="danger-button" data-action="delete-project" data-id="${project.id}" ${canAdmin() ? "" : "disabled"}>Delete</button></div></section><section class="toolbar"><div><strong>Task drawers</strong><p class="card-copy">Open a category only when you need the details.</p></div><button class="secondary-button" data-action="open-task-form" ${canEdit() ? "" : "disabled"}>Add Task</button></section>${tasksForProject(project.id).length ? groupedTasks(project.id) : `<section class="card empty-state">No tasks yet. Add a task to begin tracking work.</section>`}`, progress === 100);
+  renderShell(`<button class="back-button" data-view="home">← Back to projects</button><section class="card"><div class="card-row"><div><h2 class="card-title">${escapeHtml(project.title)}</h2><p class="card-copy">${escapeHtml(project.description || "No description yet.")}</p></div><div class="countdown ${countdownClass(project.deadline)}">${countdownLabel(project.deadline)}<small>${formatDate(project.deadline)}</small></div></div>${projectPulseMarkup(progress)}<div class="action-grid"><button class="secondary-button" data-action="open-project-form" data-id="${project.id}" ${canEdit() ? "" : "disabled"}>Edit</button><button class="danger-button" data-action="delete-project" data-id="${project.id}" ${canAdmin() ? "" : "disabled"}>Delete</button></div></section><section class="toolbar"><div><strong>Tasks</strong><p class="card-copy">Grouped by status.</p></div><button class="secondary-button" data-action="open-task-form" ${canEdit() ? "" : "disabled"}>Add Task</button></section>${tasksForProject(project.id).length ? groupedTasks(project.id) : `<section class="card empty-state">No tasks yet. Add a task to begin tracking work.</section>`}`, progress === 100);
 }
 
 function renderTaskDetail() {
@@ -148,18 +179,16 @@ function renderActivity() {
 }
 
 function renderHelp() {
-  renderShell(`<section class="card"><h2 class="card-title">Project Pulse v0.2</h2><p class="card-copy">This version adds profile editing, editable subtasks, category drawers, a donut-style project pulse, and a celebration backdrop at 100%.</p></section><section class="card"><h3 class="card-title">Important note</h3><p class="card-copy">Photos and usernames are local prototype fields only. Real secure login requires a backend such as Supabase or Firebase.</p></section>`);
+  renderShell(`<section class="card"><h2 class="card-title">Project Pulse v0.2.2</h2><p class="card-copy">This version cleans up user-facing copy in the task grouping area.</p></section><section class="card"><h3 class="card-title">Current task view</h3><p class="card-copy">Tasks are grouped by status so you can quickly find completed, active, and not-started work.</p></section>`);
 }
 
 function openModal(title, body) { document.body.insertAdjacentHTML("beforeend", `<div class="modal-backdrop" data-action="close-modal"><section class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()"><div class="modal-header"><h2>${escapeHtml(title)}</h2><button class="close-button" data-action="close-modal">×</button></div>${body}</section></div>`); }
 function closeModal() { document.querySelector(".modal-backdrop")?.remove(); }
-
 function projectForm(project = {}) { openModal(project.id ? "Edit Project" : "Add Project", `<form class="form-grid" data-form="project"><input type="hidden" name="id" value="${project.id || ""}" /><div class="field"><label>Title</label><input name="title" required value="${escapeHtml(project.title || "")}" /></div><div class="field"><label>Description</label><textarea name="description">${escapeHtml(project.description || "")}</textarea></div><div class="field"><label>Deadline</label><input type="date" name="deadline" required value="${project.deadline || addDaysIso(7)}" /></div><button class="primary-button">Save Project</button></form>`); }
 function taskForm(task = {}) { openModal(task.id ? "Edit Task" : "Add Task", `<form class="form-grid" data-form="task"><input type="hidden" name="id" value="${task.id || ""}" /><div class="field"><label>Title</label><input name="title" required value="${escapeHtml(task.title || "")}" /></div><div class="field"><label>Description</label><textarea name="description">${escapeHtml(task.description || "")}</textarea></div><div class="inline-fields"><div class="field"><label>Due date</label><input type="date" name="due_date" required value="${task.due_date || addDaysIso(3)}" /></div><div class="field"><label>Status</label><select name="status"><option value="not started" ${task.status === "not started" ? "selected" : ""}>Not started</option><option value="in progress" ${task.status === "in progress" ? "selected" : ""}>In progress</option><option value="completed" ${task.status === "completed" ? "selected" : ""}>Completed</option></select></div></div><div class="field"><label>Assigned user</label><select name="assigned_to">${state.users.map((user) => `<option value="${user.id}" ${task.assigned_to === user.id ? "selected" : ""}>${escapeHtml(user.name)}</option>`).join("")}</select></div><button class="primary-button">Save Task</button></form>`); }
 function subtaskForm(subtask = {}) { openModal(subtask.id ? "Edit Subtask" : "Add Subtask", `<form class="form-grid" data-form="subtask"><input type="hidden" name="id" value="${subtask.id || ""}" /><div class="field"><label>Subtask title</label><input name="title" required value="${escapeHtml(subtask.title || "")}" /></div><button class="primary-button">Save Subtask</button></form>`); }
 function userForm() { openModal("Add User", `<form class="form-grid" data-form="user"><div class="field"><label>Name</label><input name="name" required /></div><div class="field"><label>Username</label><input name="username" required /></div><div class="field"><label>Email</label><input type="email" name="email" required /></div><div class="field"><label>Permission</label><select name="role"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div><button class="primary-button">Add User</button></form>`); }
 function profileForm() { const user = currentUser(); openModal("Profile", `<form class="form-grid" data-form="profile"><div class="card-row"><div class="profile-photo-preview">${user.photo ? `<img class="avatar" src="${user.photo}" alt="${escapeHtml(user.name)}" />` : escapeHtml((user.name || "?").slice(0,1))}</div><p class="card-copy">Customize this prototype for you. Secure login comes later with a backend.</p></div><div class="field"><label>Photo</label><input type="file" name="photo" accept="image/*" /></div><div class="field"><label>Name</label><input name="name" required value="${escapeHtml(user.name || "")}" /></div><div class="field"><label>Username</label><input name="username" required value="${escapeHtml(user.username || "")}" /></div><div class="field"><label>Email</label><input type="email" name="email" required value="${escapeHtml(user.email || "")}" /></div><button class="primary-button">Save Profile</button></form>`); }
-
 async function fileToDataUrl(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
 
 async function handleFormSubmit(event) {
@@ -174,8 +203,7 @@ async function handleFormSubmit(event) {
 
 function handleClick(event) {
   const button = event.target.closest("button, input[type='checkbox']"); if (!button) return; const action = button.dataset.action; const view = button.dataset.view; const id = button.dataset.id;
-  if (view) return setView(view);
-  if (!action) return;
+  if (view) return setView(view); if (!action) return;
   if (["open-project-form", "open-task-form", "open-subtask-form"].includes(action) && !canEdit()) return;
   if (["delete-project", "delete-task", "delete-subtask", "open-user-form"].includes(action) && !canAdmin()) return;
   if (action === "close-modal") closeModal();
