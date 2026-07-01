@@ -1,56 +1,111 @@
 # Project Pulse
 
-Project Pulse is a mobile-first project management app prototype for planning projects, assigning tasks, tracking countdowns, and monitoring progress.
+Project Pulse is a mobile-first project management app for planning projects, assigning work, tracking deadlines, and monitoring progress.
 
-## Version
+## Current Version
 
-Current version: `v0.1`
+**v0.1.0 — Local prototype foundation**
 
-This is the first functional prototype. It intentionally uses browser `localStorage` instead of a backend so the core workflow can be tested quickly before adding authentication, real-time syncing, push notifications, and production permissions.
+This version is intentionally built as a simple browser-based prototype with local storage. It proves the core app flow before adding authentication, a database, real-time shared editing, and push notifications.
 
-## Included in v0.1
+## Included in v0.1.0
 
 - Mobile-first app shell
-- Project list/home screen
-- Add, edit, and delete projects
+- Home screen with project cards
 - Project detail screen
-- Add, edit, and delete tasks
 - Task detail screen
+- Shared workspace screen
+- Activity log screen
+- Add, edit, and delete projects
+- Add, edit, and delete tasks
 - Assign tasks to users
-- Due date and deadline countdowns
-- Progress bars
-- Subtask checklist
-- Automatic task progress from subtasks
-- Automatic completed status when progress reaches 100%
-- Shared workspace prototype
-- User roles: admin, editor, viewer
-- Basic role-based editing behavior
-- Activity log
-- Local browser persistence
+- Add, complete, and delete subtasks
+- Countdown calculations for project and task deadlines
+- Task progress calculation from subtasks
+- Project progress calculation from task averages
+- Automatic status updates when progress reaches 100%
+- Basic role behavior for admin, editor, and viewer
+- Local browser persistence using `localStorage`
 
-## Not yet included
+## Not Yet Included
 
-These features are part of the MVP goal but require a backend or app platform integration:
+These are planned for later versions:
 
+- Real user accounts
 - Real-time shared editing
-- Actual user accounts/login
-- True email invitations
-- Server-enforced permissions
+- Database storage
+- Email invitations
 - Push notifications
-- Cloud database persistence
+- Offline sync strategy
+- Production deployment
 
-## Suggested next step
+## Roadmap
 
-Build `v0.2` by connecting the app to a backend service such as Supabase or Firebase. Recommended next priorities:
+### v0.2.0 — Project Workflow Refinement
 
-1. Choose backend platform.
-2. Add authentication.
-3. Replace localStorage with database tables for users, projects, tasks, subtasks, and activity.
-4. Add real-time syncing.
-5. Add notification groundwork.
+- Improve add/edit project forms
+- Add better empty states
+- Add project sorting and filtering
+- Add confirmation and error messaging
 
-## How to run
+### v0.3.0 — Task Workflow Refinement
 
-Because this version is plain HTML, CSS, and JavaScript, it can be opened directly in a browser.
+- Improve task creation speed
+- Add task filters by status and assignee
+- Add clearer due-date urgency indicators
 
-Open `index.html` locally, or publish the repo with GitHub Pages for easy mobile testing.
+### v0.4.0 — Subtasks and Progress
+
+- Refine progress calculations
+- Add manual progress controls for tasks without subtasks
+- Add completion summaries
+
+### v0.5.0 — Team and Permissions
+
+- Improve user management
+- Clarify admin/editor/viewer behavior
+- Prepare for real authentication
+
+### v0.6.0 — Backend Planning
+
+- Choose Supabase or Firebase
+- Define database schema
+- Add environment setup documentation
+
+### v0.7.0 — Real-Time Sync
+
+- Replace local storage with backend data
+- Add shared project updates
+- Add live activity log updates
+
+### v0.8.0 — Notifications
+
+- Add notification groundwork
+- Task assigned notifications
+- Due-in-24-hours reminders
+- Project deadline 7-day reminders
+
+### v1.0.0 — First Stable Release
+
+- Production-ready app structure
+- Deployment instructions
+- Final mobile polish
+- Testing checklist
+
+## How to Test Locally
+
+Open `index.html` in a browser. The app stores data in the browser using local storage, so changes will persist on the same device/browser until local storage is cleared.
+
+## File Structure
+
+```text
+project-pulse/
+├── index.html
+├── styles.css
+├── app.js
+└── README.md
+```
+
+## Development Notes
+
+This project is being built incrementally. Each version should keep the app functional before moving to the next planned feature.
